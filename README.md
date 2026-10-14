@@ -9,7 +9,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/README_images/ChArUco_Marker.png" alt="ChArUco calibration board" width="420"/>
+  <img src="examples/calibration_images/calib_0018_20260917_083712_24corners.png" alt="Real ChArUco calibration capture" width="760"/>
+</p>
+
+<p align="center">
+  <em>Real calibration frame captured with the fisheye camera used to validate this fork.</em>
 </p>
 
 ---
@@ -544,25 +548,51 @@ These files can be used as a visual reference when validating a new installation
 ## ChArUco Target
 
 <p align="center">
-  <img src="docs/README_images/ChArUco_Marker.png" width="450"/>
+  <img src="docs/README_images/ChArUco_Marker.png" width="420"/>
 </p>
-
-## Marker Detection
 
 <p align="center">
-  <img src="docs/README_images/detected_markers.png" width="650"/>
+  <em>Reference ChArUco target used by the original project.</em>
 </p>
 
-## ChArUco Corner Detection
+## Real Calibration Capture
+
+<p align="center">
+  <img src="examples/calibration_images/calib_0018_20260917_083712_24corners.png" width="760"/>
+</p>
+
+<p align="center">
+  <em>Example from the calibration dataset included with this fork. The board is detected across a wide portion of the fisheye field of view.</em>
+</p>
+
+## Real Camera Image — Before Undistortion
+
+<p align="center">
+  <img src="examples/raw_images/img16_2026-04-17_08-26-00_001.jpg" width="760"/>
+</p>
+
+<p align="center">
+  <em>Raw image captured from the fisheye camera.</em>
+</p>
+
+## Same Image — After Fisheye Undistortion
+
+<p align="center">
+  <img src="examples/undistorted_images/img16_2026-04-17_08-26-00_001.jpg" width="760"/>
+</p>
+
+<p align="center">
+  <em>Result produced using the calibrated fisheye model and the repository's undistortion pipeline.</em>
+</p>
+
+## Original Detection Reference
 
 <p align="center">
   <img src="docs/README_images/corner_detection.png" width="650"/>
 </p>
 
-## Undistorted Image
-
 <p align="center">
-  <img src="docs/README_images/undistorted.jpg" width="700"/>
+  <em>Original repository reference image illustrating ChArUco corner detection.</em>
 </p>
 
 ---
