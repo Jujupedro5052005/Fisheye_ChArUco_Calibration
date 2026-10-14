@@ -568,21 +568,21 @@ These files can be used as a visual reference when validating a new installation
 ## Real Camera Image — Before Undistortion
 
 <p align="center">
-  <img src="examples/raw_images/img16_2026-04-17_08-26-00_001.jpg" width="760"/>
+  <img src="examples/raw_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
 </p>
 
 <p align="center">
-  <em>Raw image captured from the fisheye camera.</em>
+  <em>Raw fisheye image from the example dataset. Strong window-frame and desk edges make the lens distortion easy to inspect visually.</em>
 </p>
 
 ## Same Image — After Fisheye Undistortion
 
 <p align="center">
-  <img src="examples/undistorted_images/img16_2026-04-17_08-26-00_001.jpg" width="760"/>
+  <img src="examples/undistorted_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
 </p>
 
 <p align="center">
-  <em>Result produced using the calibrated fisheye model and the repository's undistortion pipeline.</em>
+  <em>Undistorted result produced by the repository pipeline using the calibrated fisheye model.</em>
 </p>
 
 ## Original Detection Reference
