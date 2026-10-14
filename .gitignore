@@ -1,7 +1,35 @@
-data/calibration/images/
-data/calibration/camera_intrinsics/
-data/undistorted_images/
-data/virtual_cameras/
-data/raw_images/
-reconstruction/
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+.venv/
+.venv_test/
+venv/
+myvenv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# User-generated data
+data/calibration/images/*
+!data/calibration/images/.gitkeep
+
+data/calibration/camera_intrinsics/*
+!data/calibration/camera_intrinsics/.gitkeep
+
+data/raw_images/*
+!data/raw_images/.gitkeep
+
+data/undistorted_images/*
+!data/undistorted_images/.gitkeep
+
+# Generated data
+data/virtual_cameras/
+reconstruction/

@@ -1,239 +1,837 @@
-# Fisheye Charuco Calibration
-### Overview
-This Python script provides a class for calibrating a camera using a ChArUco board. It allows calibration of fisheye cameras combining existing opencv modules of cv.aruco and cv.fisheye. It also has support for pinhole cameras.
+# Fisheye ChArUco Camera Calibration
 
-![](docs/README_images/detected_markers.png)
-### Getting Started
-To get up and running with the code base it is strongly suggested to use a virtual enviroment due to the specific versions of opencv and other libaries. This can be setup on using the following commands.
+<p align="center">
+  <strong>Camera intrinsic calibration toolkit for fisheye and pinhole lenses using OpenCV and ChArUco boards.</strong>
+</p>
+
+<p align="center">
+  Designed for practical robotics, automotive vision, multi-camera systems, 3D reconstruction and perception pipelines.
+</p>
+
+<p align="center">
+  <img src="docs/README_images/ChArUco_Marker.png" alt="ChArUco calibration board" width="420"/>
+</p>
+
+---
+
+## Overview
+
+This repository provides a complete workflow for estimating camera intrinsic parameters using a **ChArUco calibration target**.
+
+It supports both:
+
+- **Fisheye camera calibration** using `cv2.fisheye.calibrate()`
+- **Pinhole camera calibration** using OpenCV's conventional camera model
+
+The repository also includes tools for:
+
+- live ChArUco detection;
+- capturing calibration images;
+- estimating camera intrinsics;
+- exporting parameters in COLMAP-compatible format;
+- undistorting images;
+- comparing fisheye and pinhole models;
+- storing example datasets and expected outputs.
+
+The project was adapted from the original  
+[`jamiemilsom/Fisheye_ChArUco_Calibration`](https://github.com/jamiemilsom/Fisheye_ChArUco_Calibration)  
+and extended for a cleaner, reproducible camera-calibration workflow.
+
+---
+
+# Features
+
+✅ Live ChArUco board detection  
+✅ Interactive image capture  
+✅ Fisheye intrinsic calibration  
+✅ Pinhole intrinsic calibration  
+✅ RMS reprojection-error reporting  
+✅ Image undistortion  
+✅ COLMAP parameter export  
+✅ OpenCV ArUco API compatibility  
+✅ Clean dataset organization  
+✅ Example calibration dataset included  
+✅ Reproducible Python environment  
+
+---
+
+# Calibration Pipeline
+
+```text
+┌───────────────────────┐
+│   Camera / Video Feed │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│ ChArUco Board Detection│
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│ Calibration Images    │
+│ data/calibration/...  │
+└───────────┬───────────┘
+            │
+            ▼
+┌──────────────────────────────┐
+│ Camera Intrinsic Calibration │
+│                              │
+│   Fisheye       Pinhole      │
+└───────────┬──────────────────┘
+            │
+            ▼
+┌───────────────────────┐
+│ Intrinsic Parameters  │
+│ K + Distortion        │
+└───────────┬───────────┘
+            │
+            ▼
+┌───────────────────────┐
+│ Image Undistortion    │
+└───────────────────────┘
 ```
-python -m venv myenv
-source myenv/bin/activate  # macOS/Linux
-myenv\Scripts\activate     # Windows
 
-python -m pip install --upgrade pip  # reccomended but not essential
+---
+
+# Repository Structure
+
+```text
+Fisheye_ChArUco_Calibration/
+│
+├── data/
+│   ├── calibration/
+│   │   ├── images/
+│   │   └── camera_intrinsics/
+│   │
+│   ├── raw_images/
+│   └── undistorted_images/
+│
+├── examples/
+│   ├── calibration_images/
+│   ├── camera_intrinsics/
+│   ├── raw_images/
+│   └── undistorted_images/
+│
+├── docs/
+│   └── README_images/
+│
+├── scripts/
+│   ├── capture_calibration_images.py
+│   ├── run_calibration.py
+│   ├── undistort_images.py
+│   └── generate_virtual_cameras.py
+│
+├── src/
+│   ├── calibration/
+│   │   └── calibrate.py
+│   └── virtual_camera/
+│
+├── tests/
+│
+├── requirements.txt
+├── setup.py
+├── licence.txt
+└── README.md
 ```
-The enviroment can be deactivated by simply typing
 
+### `data/`
+
+Working directory used for your own calibration.
+
+Generated files in this directory are intentionally excluded from Git.
+
+### `examples/`
+
+Reference dataset included with the repository.
+
+It contains:
+
+- calibration images;
+- resulting intrinsic parameters;
+- raw camera images;
+- corresponding undistorted images.
+
+This provides a known working example for validating the installation and understanding the expected workflow.
+
+---
+
+# Requirements
+
+Recommended environment:
+
+```text
+Python 3.10+
+NumPy 1.26
+OpenCV Contrib 4.8
 ```
-deactivate
+
+The main Python dependencies are:
+
+```text
+numpy==1.26.0
+opencv-contrib-python==4.8.0.76
 ```
 
-Now to install the package to get running
+`opencv-contrib-python` is required because the ChArUco and ArUco modules are part of OpenCV Contrib.
+
+---
+
+# Installation
+
+Clone your fork:
+
+```bash
+git clone https://github.com/Jujupedro5052005/Fisheye_ChArUco_Calibration.git
+cd Fisheye_ChArUco_Calibration
 ```
-pip install setuptools
-pip install -e .
+
+Create a virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 ```
-All dependencies will now be installed and the modules can be installed in any python file in this venv.
 
+Upgrade pip:
 
-### Structure
-The Project is split up into the following folders, to get started place your calibration images into data/calibration/images and your images you wish to undistort into data/raw_images. All other folders will have information generated into.
+```bash
+python -m pip install --upgrade pip
 ```
-├── data
-│   ├── calibration
-│   │   ├── camera_intrinsics
-│   │   └── images
-│   ├── raw_images
-│   ├── undistorted_images
-│   └── virtual_cameras
-├── docs
-│   └── README_images
-├── scripts
-├── src
-│   ├── calibration
-│   └── virtual_camera
-└── tests
+
+Install the dependencies:
+
+```bash
+python -m pip install -r requirements.txt
 ```
-After adding your images to the correct folders there are common calibration and undistortion implementations available in the scripts folder that work out of the box for most cases. For help with understanding or troubleshooting an explaination of the core classes is provided below. If you do not have calibration images, a board can be generated on your screen using the code below and calibration images can be taken.
 
-## ChArUco Board for Camera Calibration
+Verify the installation:
 
-A ChArUco board is a hybrid calibration pattern that combines chessboard patterns with ArUco markers. It offers several advantages over traditional calibration methods:
+```bash
+python - <<'PY'
+import cv2
+import numpy as np
 
-1. Robust detection even with partial occlusions
-2. Automatic and accurate corner detection
-3. Unique identification of each corner
+print("OpenCV:", cv2.__version__)
+print("NumPy :", np.__version__)
+print("ArUco :", hasattr(cv2, "aruco"))
+print("Fisheye:", hasattr(cv2, "fisheye"))
+PY
+```
 
-### Generating a ChArUco Board
+---
 
-The `CharucoCalibrator` class provides methods to generate ChArUco boards:
+# ChArUco Board Configuration
+
+The current repository is configured for:
+
+| Parameter | Value |
+|---|---:|
+| Dictionary | `DICT_5X5_100` |
+| Board size | `7 × 5` squares |
+| Square length | `40 mm` |
+| Marker length | `28 mm` |
+
+Equivalent configuration:
 
 ```python
-calibrator.generate_charuco_board()
+ARUCO_DICT = cv2.aruco.DICT_5X5_100
+
+SQUARES_VERTICALLY = 7
+SQUARES_HORIZONTALLY = 5
+
+SQUARE_LENGTH = 0.040
+MARKER_LENGTH = 0.028
 ```
-![](docs/README_images/ChArUco_Marker.png)
 
-This method creates a ChArUco board image and saves it as "charuco_board.png" in the data/calibration/ directory.
+> **Important**
+>
+> The dimensions and physical measurements configured in the software must match the printed board exactly.
+>
+> Do not print the board using any option that automatically rescales it to fit the page.
 
-### Key Parameters
+---
 
-When initializing the calibrator, several parameters define the ChArUco board:
+# 1. Capture Calibration Images
 
-- `aruco_dict`: The ArUco dictionary to use (e.g., cv2.aruco.DICT_5X5_100)
-- `squares_vertically`: Number of squares vertically in the ChArUco board
-- `squares_horizontally`: Number of squares horizontally in the ChArUco board
-- `square_length`: Physical length of each square in the ChArUco board (in your chosen unit, e.g., meters)
-- `marker_length`: Physical length of each ArUco marker in the ChArUco board (in the same unit as square_length)
+Connect the camera and run:
 
-### Taking Calibration Photos
+```bash
+python scripts/capture_calibration_images.py
+```
 
-To achieve accurate calibration, follow these guidelines when capturing images of the ChArUco board:
+The default device is:
 
-1. Print the generated ChArUco board on a flat, rigid surface.
-2. Ensure good, even lighting to avoid shadows or reflections.
-3. Capture 10-20 images of the board from different angles and distances.
-4. Cover the entire field of view of the camera in your images.
-5. Include some images where the board is tilted or rotated.
-6. Ensure the entire board is visible in most images.
-7. Avoid motion blur by keeping the camera and board still during capture.
+```text
+/dev/video5
+```
 
-### Calibration Process
+A different camera can be selected with:
 
-The calibration process involves these steps:
+```bash
+python scripts/capture_calibration_images.py --device /dev/video0
+```
 
-1. Generate and print the ChArUco board.
-2. Take multiple photos of the board as described above.
-3. Place the calibration images in the specified `calibration_images_dir`.
-4. Run the `calibrate()` method of the `FisheyeCalibrator` or `PinholeCalibrator`.
+### Keyboard Controls
 
-### Additional Utilities
+| Key | Action |
+|---|---|
+| `SPACE` | Save valid calibration image |
+| `S` | Save valid calibration image |
+| `F` | Force-save raw image |
+| `Q` | Quit |
+| `ESC` | Quit |
 
-The `CharucoCalibrator` class provides additional methods for working with ChArUco boards:
+Calibration images are stored in:
 
-- `generate_blank_board()`: Creates a blank black board for custom modifications.
-- `detect_aruco_markers()`: Detects ArUco markers in an image.
-- `detect_charuco_corners()`: Detects ChArUco corners in an image.
-- `show_aruco_markers()`: Displays detected ArUco markers in an image.
-- `show_charuco_corners()`: Displays detected ChArUco corners in an image.
+```text
+data/calibration/images/
+```
 
+Forced raw frames are stored separately in:
 
+```text
+data/raw_images/
+```
 
-These methods can be useful for verifying the quality of your calibration images and troubleshooting any issues in the calibration process.
+This prevents arbitrary test images from accidentally contaminating the calibration dataset.
 
-## FisheyeCalibrator
+---
 
-The `FisheyeCalibrator` class is a specialized calibration tool designed for fisheye cameras. It inherits from the `CharucoCalibrator` base class and provides methods for calibrating fisheye cameras using ChArUco boards, undistorting fisheye images, and exporting camera parameters.
+# Capturing a Good Calibration Dataset
 
-### Key Features
+The quality of the calibration depends much more on **image diversity** than on simply collecting many images.
 
-1. Fisheye-specific camera calibration
-2. Image undistortion for fisheye lenses
-3. Export of camera parameters in COLMAP format
+A good fisheye dataset should contain approximately:
 
-### Usage
+```text
+50–70 useful frames
+```
 
-#### Initialization
+Try to cover:
+
+- image center;
+- left and right edges;
+- top and bottom edges;
+- all four corners;
+- close distances;
+- medium distances;
+- farther working distances;
+- positive and negative yaw;
+- positive and negative pitch;
+- board roll;
+- multiple board sizes in the image.
+
+For fisheye lenses, observations close to the image boundaries are especially valuable because this is where lens distortion is strongest.
+
+Avoid collecting many nearly identical frames.
+
+A useful rough distribution is:
+
+```text
+40% near
+40% medium
+20% far
+```
+
+---
+
+# 2. Run Camera Calibration
+
+Once calibration images are available:
+
+```bash
+python scripts/run_calibration.py
+```
+
+The script calculates both:
+
+```text
+Fisheye calibration
+Pinhole calibration
+```
+
+Results are stored under:
+
+```text
+data/calibration/camera_intrinsics/
+```
+
+The generated files are:
+
+```text
+fisheye_calibration.json
+pinhole_calibration.json
+```
+
+Example output:
+
+```text
+============================================================
+FISHEYE CALIBRATION
+============================================================
+
+Number of images used for calibration: 26
+RMS reprojection error: 0.826293 px
+
+K:
+[[998.40712335   0.         965.57191672]
+ [  0.        1001.22184062 774.67257586]
+ [  0.           0.           1.        ]]
+
+Distortion coefficients:
+[[-0.05107059]
+ [-0.01949934]
+ [ 0.01741483]
+ [-0.01020589]]
+```
+
+---
+
+# Intrinsic Camera Matrix
+
+The intrinsic matrix is defined as:
+
+```text
+     ┌ fx   0   cx ┐
+K =  │ 0   fy   cy │
+     └ 0    0    1 ┘
+```
+
+where:
+
+- `fx` — focal length in pixels along X;
+- `fy` — focal length in pixels along Y;
+- `cx` — principal point X coordinate;
+- `cy` — principal point Y coordinate.
+
+For the fisheye model, OpenCV uses four distortion coefficients:
+
+```text
+D = [k1, k2, k3, k4]
+```
+
+---
+
+# Fisheye vs Pinhole
+
+The calibration script computes both models for comparison.
+
+Example results from the included dataset:
+
+| Model | RMS Reprojection Error |
+|---|---:|
+| Fisheye | `0.826 px` |
+| Pinhole | `0.910 px` |
+
+For strongly distorted wide-angle cameras, the fisheye model will generally provide the more appropriate representation.
+
+For narrow-FOV cameras, the conventional pinhole model may be sufficient.
+
+---
+
+# 3. Undistort Images
+
+Place test images inside:
+
+```text
+data/raw_images/
+```
+
+Then run:
+
+```bash
+python scripts/undistort_images.py
+```
+
+The default model is:
 
 ```python
-fisheye_calibrator = FisheyeCalibrator(
-    aruco_dict,
-    squares_vertically,
-    squares_horizontally,
-    square_length,
-    marker_length,
-    calibration_images_dir,
-    raw_images_dir
-)
+MODEL = "fisheye"
 ```
 
-#### Calibration
+Undistorted images are saved in:
+
+```text
+data/undistorted_images/
+```
+
+---
+
+# Fisheye Balance Parameter
+
+The fisheye undistortion script exposes:
 
 ```python
-fisheye_calibrator.calibrate(
-    grayscale=True,
-    calibration_filename='fisheye_calibration.json',
-    window_size=(480, 480),
-    verbose=False
-)
+BALANCE = 0.6
 ```
 
-This method performs the following steps:
-1. Detects ChArUco corners in calibration images
-2. Collects object points and image points
-3. Performs fisheye camera calibration using cv2.fisheye.calibrate
-4. Saves the calibration parameters to a JSON file
+This controls the trade-off between preserving the original field of view and removing unused image regions.
 
-#### Image Undistortion
+Conceptually:
+
+```text
+BALANCE = 0.0
+│
+├── more cropping
+├── less black border
+└── smaller retained FOV
 
 
-```python
-undistorted_image = fisheye_calibrator.undistort_image(
-    image,
-    image_name=None,
-    calibration_filename='fisheye_calibration.json',
-    balance=1,
-    show_image=True,
-    save_image=True,
-    output_path=None,
-    window_size=(480, 480)
-)
-```
-![](docs/README_images/undistorted.jpg)
-This method:
-1. Loads calibration parameters
-2. Undistorts the input image using cv2.fisheye.undistortImage
-3. Optionally displays and saves the undistorted image
-
-#### Exporting Camera Parameters
-
-```python
-fisheye_calibrator.export_camera_params_colmap(calibration_path=None)
+BALANCE = 1.0
+│
+├── larger retained FOV
+├── more image boundary visible
+└── potentially larger black regions
 ```
 
-This method exports the camera parameters in COLMAP format, which includes:
-- Focal lengths (fx, fy)
-- Principal point (cx, cy)
-- Distortion coefficients (k1, k2, k3, k4)
+A value around:
 
-### Key Methods
-
-1. `calibrate()`: Performs fisheye camera calibration using ChArUco markers.
-2. `undistort_image()`: Undistorts a fisheye image using calibrated parameters.
-3. `export_camera_params_colmap()`: Exports camera parameters in COLMAP format.
-
-
-## ConcentricCamera Class
-
-The ConcentricCamera class is a virtual camera implementation designed to split images into concentric circular sections. This class is aimed to help split the calibration process into different fovs for ultra wide fisheye cameras as the outside may have differnt opencv distortion parameters to the center.
-
-Features
-- Concentric Splitting: Splits images into concentric circular sections based on specified radii ratios.
-- Flexible Configuration: Allows configuration of multiple splits with customizable overlap ratios.
-- Automated Processing: Automatically processes all images in the input folder and saves the segmented images into the designated output folder.
-
-![](docs/README_images/virtual_cameras.png)
-
-### Initialization
-
-To use the ConcentricCamera class, you need to initialize it with the paths to your input and output folders, along with the desired splits and overlap ratio.
-Parameters
-
-- **input_folder (str):** Path to the folder containing input images. Images can be in formats like .jpg, .jpeg, .png, .bmp, and .tiff.
-- **output_folder (str):** Path to the folder where processed images will be saved.
-- **splits (list of float):** List of radii ratios (between 0 and 1) for splitting the image into concentric circles. Each ratio represents the outer radius of each concentric section as a proportion of the minimum image dimension (height or width).
-- **overlap_ratio (float):** The ratio of overlap between adjacent sections. It defines how much the concentric circles overlap with each other.
-
-```
-concentric_cam = ConcentricCamera(
-    input_folder="path/to/input/folder",
-    output_folder="path/to/output/folder",
-    splits=[0.3, 0.6, 0.9],
-    overlap_ratio=0.1
-)
+```text
+0.5 – 0.7
 ```
 
-### Create an instance of ConcentricCamera
-```
-concentric_cam = ConcentricCamera(
-    input_folder="path/to/input/folder",
-    output_folder="path/to/output/folder",
-    splits=[0.5, 0.8], # Define splits as ratios
-    overlap_ratio=0.05 # Define overlap ratio
-)
+is often a useful starting point.
 
-# Process each image in the input folder
-for image_path in concentric_cam.input_image_list:
-    concentric_cam.split_image(image_path)
+---
+
+# Example Data
+
+The repository includes a complete example under:
+
+```text
+examples/
 ```
 
-This code will read each image from the input folder, split it into concentric sections according to the specified radii ratios, and save the processed sections in the designated output folder. Each section is stored in a subdirectory named based on the split (e.g., camera_0, camera_1, etc.).
+### Calibration images
+
+```text
+examples/calibration_images/
+```
+
+Contains a known ChArUco calibration dataset.
+
+### Reference intrinsics
+
+```text
+examples/camera_intrinsics/
+```
+
+Contains the resulting fisheye and pinhole calibration files.
+
+### Raw images
+
+```text
+examples/raw_images/
+```
+
+Contains distorted images from the camera.
+
+### Undistorted images
+
+```text
+examples/undistorted_images/
+```
+
+Contains the corresponding corrected images.
+
+These files can be used as a visual reference when validating a new installation.
+
+---
+
+# Visual Examples
+
+## ChArUco Target
+
+<p align="center">
+  <img src="docs/README_images/ChArUco_Marker.png" width="450"/>
+</p>
+
+## Marker Detection
+
+<p align="center">
+  <img src="docs/README_images/detected_markers.png" width="650"/>
+</p>
+
+## ChArUco Corner Detection
+
+<p align="center">
+  <img src="docs/README_images/corner_detection.png" width="650"/>
+</p>
+
+## Undistorted Image
+
+<p align="center">
+  <img src="docs/README_images/undistorted.jpg" width="700"/>
+</p>
+
+---
+
+# Complete Workflow
+
+The normal workflow is:
+
+```bash
+# 1. Activate environment
+source .venv/bin/activate
+
+# 2. Capture calibration images
+python scripts/capture_calibration_images.py --device /dev/video0
+
+# 3. Estimate camera intrinsics
+python scripts/run_calibration.py
+
+# 4. Capture or place arbitrary images in data/raw_images/
+
+# 5. Undistort the images
+python scripts/undistort_images.py
+```
+
+In short:
+
+```text
+Camera
+  │
+  ▼
+Capture ChArUco Images
+  │
+  ▼
+Intrinsic Calibration
+  │
+  ├── Fisheye K + D
+  │
+  └── Pinhole K + D
+  │
+  ▼
+Capture Raw Images
+  │
+  ▼
+Undistortion
+  │
+  ▼
+Ready for downstream computer vision
+```
+
+---
+
+# COLMAP Export
+
+The calibration script also prints the camera parameters in a COLMAP-compatible format.
+
+For example:
+
+```text
+OPENCV_FISHEYE:
+fx, fy, cx, cy, k1, k2, k3, k4
+```
+
+This makes the calibration directly useful in reconstruction and multi-view vision pipelines.
+
+---
+
+# Applications
+
+This calibration pipeline is suitable for:
+
+- autonomous vehicles;
+- robotics;
+- surround-view camera systems;
+- visual perception;
+- camera–LiDAR fusion;
+- bird's-eye-view systems;
+- visual odometry;
+- SLAM;
+- 3D reconstruction;
+- COLMAP workflows;
+- multi-camera systems;
+- industrial computer vision.
+
+---
+
+# Troubleshooting
+
+### Camera cannot be opened
+
+Check available camera devices:
+
+```bash
+ls /dev/video*
+```
+
+Then specify one explicitly:
+
+```bash
+python scripts/capture_calibration_images.py --device /dev/video0
+```
+
+---
+
+### ChArUco board is not detected
+
+Check:
+
+- the correct ArUco dictionary is being used;
+- the printed board geometry matches the software configuration;
+- the board is sufficiently large in the image;
+- illumination is adequate;
+- motion blur is low;
+- the complete board is not required, but enough identifiable markers must be visible.
+
+---
+
+### Calibration dataset is empty
+
+Calibration images must be located in:
+
+```text
+data/calibration/images/
+```
+
+---
+
+### Undistortion finds no images
+
+Raw images must be located in:
+
+```text
+data/raw_images/
+```
+
+---
+
+### Wrong Python/OpenCV version is loaded
+
+Verify:
+
+```bash
+which python
+python -c "import sys; print(sys.executable)"
+```
+
+Then inspect OpenCV:
+
+```bash
+python - <<'PY'
+import cv2
+print(cv2.__version__)
+print(cv2.__file__)
+PY
+```
+
+The path should point inside the active virtual environment.
+
+---
+
+# Calibration Quality
+
+RMS reprojection error is useful, but it should **not be the only validation metric**.
+
+A good calibration should also be visually inspected.
+
+Pay particular attention to:
+
+- straight lines near image edges;
+- poles and building edges;
+- horizon geometry;
+- consistency across the entire image;
+- excessive stretching near the borders.
+
+For robotics and sensor-fusion applications, downstream projection accuracy is ultimately more important than minimizing RMS alone.
+
+---
+
+# Notes for Fisheye Calibration
+
+Fisheye calibration is especially sensitive to dataset coverage.
+
+A dataset containing only centered views can produce a low numerical error while still providing poor correction near the image boundaries.
+
+For this reason, intentionally move the board toward:
+
+```text
+┌──────────────────────────────────┐
+│ X             X              X   │
+│                                  │
+│                                  │
+│ X            CENTER          X   │
+│                                  │
+│                                  │
+│ X             X              X   │
+└──────────────────────────────────┘
+```
+
+and vary its orientation significantly.
+
+---
+
+# Development
+
+The calibration implementation is located in:
+
+```text
+src/calibration/calibrate.py
+```
+
+Client-facing utilities are located in:
+
+```text
+scripts/
+```
+
+The scripts add the repository's `src/` directory automatically, so the normal workflow does not require an editable package installation.
+
+---
+
+# Contributing
+
+Contributions and improvements are welcome.
+
+When modifying calibration behavior, validate changes against the included example dataset to ensure that intrinsic estimates remain consistent.
+
+Recommended checks include:
+
+```bash
+python scripts/run_calibration.py
+python scripts/undistort_images.py
+```
+
+and visual comparison against:
+
+```text
+examples/
+```
+
+---
+
+# Attribution
+
+This repository is based on:
+
+**Fisheye ChArUco Calibration**  
+by Jamie Milsom
+
+Original repository:
+
+```text
+https://github.com/jamiemilsom/Fisheye_ChArUco_Calibration
+```
+
+This fork reorganizes and extends the project with a simplified workflow, updated OpenCV compatibility, calibration examples, capture utilities, reproducible dependencies and improved documentation.
+
+---
+
+# License
+
+See:
+
+```text
+licence.txt
+```
+
+for the licensing terms inherited from the original project.
+
+---
+
+<p align="center">
+  <strong>Accurate calibration is the foundation of reliable perception.</strong>
+</p>
