@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import json
+import os
+from itertools import combinations
+
 import cv2
 import numpy as np
 
@@ -39,14 +41,26 @@ class CharucoCalibrator:
 
         self.cur_dir = os.path.dirname(os.path.abspath(__file__))
 
-        self.board = cv2.aruco.CharucoBoard(
-            (squares_vertically, squares_horizontally),
-            square_length,
-            marker_length,
-            self.aruco_dict,
-        )
+        if hasattr(cv2.aruco, "CharucoBoard"):
+            self.board = cv2.aruco.CharucoBoard(
+                (squares_vertically, squares_horizontally),
+                square_length,
+                marker_length,
+                self.aruco_dict,
+            )
+        else:
+            self.board = cv2.aruco.CharucoBoard_create(
+                squares_vertically,
+                squares_horizontally,
+                square_length,
+                marker_length,
+                self.aruco_dict,
+            )
 
-        self.params = cv2.aruco.DetectorParameters()
+        if hasattr(cv2.aruco, "DetectorParameters"):
+            self.params = cv2.aruco.DetectorParameters()
+        else:
+            self.params = cv2.aruco.DetectorParameters_create()
 
         self.K = np.zeros((3, 3), dtype=np.float64)
         self.D = None
@@ -68,22 +82,16 @@ class CharucoCalibrator:
             if not name.lower().endswith(extensions):
                 continue
 
-            image = cv2.imread(
-                os.path.join(folder_path, name)
-            )
+            image = cv2.imread(os.path.join(folder_path, name))
 
             if image is not None:
                 yield name, image
 
     def calibration_images(self):
-        yield from self.image_generator(
-            self.calibration_image_dir
-        )
+        yield from self.image_generator(self.calibration_image_dir)
 
     def raw_images(self):
-        yield from self.image_generator(
-            self.raw_image_dir
-        )
+        yield from self.image_generator(self.raw_image_dir)
 
     def detect_aruco_markers(
         self,
@@ -104,9 +112,7 @@ class CharucoCalibrator:
                 self.params,
             )
 
-            marker_corners, marker_ids, rejected = (
-                detector.detectMarkers(gray)
-            )
+            marker_corners, marker_ids, rejected = detector.detectMarkers(gray)
 
             if marker_ids is not None and len(marker_ids):
                 try:
@@ -125,35 +131,31 @@ class CharucoCalibrator:
                     pass
 
         else:
-            marker_corners, marker_ids, rejected = (
-                cv2.aruco.detectMarkers(
-                    gray,
-                    self.aruco_dict,
-                    parameters=self.params,
-                )
+            marker_corners, marker_ids, rejected = cv2.aruco.detectMarkers(
+                gray,
+                self.aruco_dict,
+                parameters=self.params,
             )
 
             if marker_ids is not None and len(marker_ids):
                 try:
-                    marker_corners, marker_ids, _, _ = (
-                        cv2.aruco.refineDetectedMarkers(
-                            gray,
-                            self.board,
-                            marker_corners,
-                            marker_ids,
-                            rejected,
-                            parameters=self.params,
-                        )
+                    result = cv2.aruco.refineDetectedMarkers(
+                        gray,
+                        self.board,
+                        marker_corners,
+                        marker_ids,
+                        rejected,
+                        parameters=self.params,
                     )
+
+                    marker_corners, marker_ids = result[:2]
 
                 except cv2.error:
                     pass
 
         if marker_ids is None or len(marker_ids) == 0:
             if verbose:
-                print(
-                    f"No ArUco markers detected in {image_name}"
-                )
+                print(f"No ArUco markers detected in {image_name}")
 
             return None, None
 
@@ -202,13 +204,9 @@ class CharucoCalibrator:
                 return None, None
 
         else:
-            detector = cv2.aruco.CharucoDetector(
-                self.board
-            )
+            detector = cv2.aruco.CharucoDetector(self.board)
 
-            charuco_corners, charuco_ids, _, _ = (
-                detector.detectBoard(gray)
-            )
+            charuco_corners, charuco_ids, _, _ = detector.detectBoard(gray)
 
         if charuco_ids is None or len(charuco_ids) == 0:
             return None, None
@@ -220,68 +218,6 @@ class CharucoCalibrator:
             )
 
         return charuco_ids, charuco_corners
-
-    def show_aruco_markers(
-        self,
-        image,
-        image_name=None,
-        window_size=(480, 480),
-        verbose=True,
-    ):
-        out = image.copy()
-
-        ids, corners = self.detect_aruco_markers(
-            out,
-            image_name=image_name,
-            verbose=verbose,
-        )
-
-        if ids is not None:
-            cv2.aruco.drawDetectedMarkers(
-                out,
-                corners,
-                ids,
-            )
-
-        cv2.imshow(
-            "Detected ArUco Markers",
-            cv2.resize(out, window_size),
-        )
-
-        if verbose:
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-    def show_charuco_corners(
-        self,
-        image,
-        image_name=None,
-        window_size=(480, 480),
-        verbose=True,
-    ):
-        out = image.copy()
-
-        ids, corners = self.detect_charuco_corners(
-            out,
-            image_name=image_name,
-            verbose=verbose,
-        )
-
-        if ids is not None:
-            cv2.aruco.drawDetectedCornersCharuco(
-                out,
-                corners,
-                ids,
-            )
-
-        cv2.imshow(
-            "Detected ChArUco Corners",
-            cv2.resize(out, window_size),
-        )
-
-        if verbose:
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
 
     def save_camera_parameters(self, file_path):
         os.makedirs(
@@ -303,15 +239,8 @@ class CharucoCalibrator:
         with open(file_path, "r") as f:
             data = json.load(f)
 
-        self.K = np.array(
-            data["K"],
-            dtype=np.float64,
-        )
-
-        self.D = np.array(
-            data["D"],
-            dtype=np.float64,
-        )
+        self.K = np.array(data["K"], dtype=np.float64)
+        self.D = np.array(data["D"], dtype=np.float64)
 
     def _intrinsics_path(self, filename):
         return os.path.abspath(
@@ -324,6 +253,121 @@ class CharucoCalibrator:
 
 
 class FisheyeCalibrator(CharucoCalibrator):
+    def _fit(self, samples, image_size):
+        K = np.zeros((3, 3), dtype=np.float64)
+        D = np.zeros((4, 1), dtype=np.float64)
+
+        flags = (
+            fisheye_flag("CALIB_RECOMPUTE_EXTRINSIC")
+            | fisheye_flag("CALIB_FIX_SKEW")
+        )
+
+        return cv2.fisheye.calibrate(
+            [sample["obj"] for sample in samples],
+            [sample["img"] for sample in samples],
+            image_size,
+            K,
+            D,
+            flags=flags,
+        )
+
+    def _try_fit(self, samples, image_size):
+        if len(samples) < 3:
+            return None
+
+        try:
+            return self._fit(samples, image_size)
+
+        except cv2.error:
+            return None
+
+    def _find_stable_subset(self, samples, image_size):
+        print()
+        print(
+            "Fisheye calibration failed with the complete dataset."
+        )
+        print(
+            "Searching automatically for unstable observations..."
+        )
+
+        ordered = sorted(
+            samples,
+            key=lambda sample: sample["coverage"],
+            reverse=True,
+        )
+
+        pool = ordered[:min(10, len(ordered))]
+
+        best_seed = None
+        best_result = None
+
+        for seed_size in (5, 4, 3):
+            if len(pool) < seed_size:
+                continue
+
+            for indices in combinations(
+                range(len(pool)),
+                seed_size,
+            ):
+                candidate = [
+                    pool[i]
+                    for i in indices
+                ]
+
+                result = self._try_fit(
+                    candidate,
+                    image_size,
+                )
+
+                if result is None:
+                    continue
+
+                if (
+                    best_result is None
+                    or result[0] < best_result[0]
+                ):
+                    best_seed = candidate
+                    best_result = result
+
+            if best_seed is not None:
+                break
+
+        if best_seed is None:
+            return None, [], samples
+
+        accepted = list(best_seed)
+
+        accepted_names = {
+            sample["name"]
+            for sample in accepted
+        }
+
+        rejected = []
+
+        for sample in ordered:
+            if sample["name"] in accepted_names:
+                continue
+
+            candidate = accepted + [sample]
+
+            result = self._try_fit(
+                candidate,
+                image_size,
+            )
+
+            if result is not None:
+                accepted.append(sample)
+                accepted_names.add(sample["name"])
+            else:
+                rejected.append(sample)
+
+        final_result = self._try_fit(
+            accepted,
+            image_size,
+        )
+
+        return final_result, accepted, rejected
+
     def calibrate(
         self,
         grayscale=True,
@@ -331,15 +375,10 @@ class FisheyeCalibrator(CharucoCalibrator):
         window_size=(480, 480),
         verbose=False,
     ):
-        object_points = []
-        image_points = []
+        board_points = self.board.getChessboardCorners()
 
-        board_points = (
-            self.board.getChessboardCorners()
-        )
-
+        samples = []
         image_size = None
-        count = 0
 
         for image_name, image in self.calibration_images():
             h, w = image.shape[:2]
@@ -354,15 +393,16 @@ class FisheyeCalibrator(CharucoCalibrator):
                 continue
 
             ids, corners = self.detect_charuco_corners(
-                image,
-                image_name,
-                grayscale,
-                verbose,
+                image=image,
+                image_name=image_name,
+                grayscale=grayscale,
+                verbose=verbose,
             )
 
             if ids is None or len(ids) <= 4:
                 print(
-                    f"Could not interpolate corners for {image_name}"
+                    f"Skipping {image_name}: "
+                    "insufficient ChArUco corners"
                 )
                 continue
 
@@ -372,59 +412,102 @@ class FisheyeCalibrator(CharucoCalibrator):
                 .astype(np.int32)
             )
 
-            object_points.append(
+            obj = (
                 board_points[ids_flat]
                 .astype(np.float64)
                 .reshape(-1, 1, 3)
             )
 
-            image_points.append(
+            img = (
                 np.asarray(
                     corners,
                     dtype=np.float64,
-                ).reshape(-1, 1, 2)
+                )
+                .reshape(-1, 1, 2)
             )
 
-            count += 1
+            points = img.reshape(-1, 2)
 
-        if count == 0:
-            print("No valid ChArUco images found.")
-            return
-
-        self.K = np.zeros(
-            (3, 3),
-            dtype=np.float64,
-        )
-
-        self.D = np.zeros(
-            (4, 1),
-            dtype=np.float64,
-        )
-
-        flags = (
-            fisheye_flag(
-                "CALIB_RECOMPUTE_EXTRINSIC"
+            hull = cv2.convexHull(
+                points.astype(np.float32)
             )
-            | fisheye_flag(
-                "CALIB_FIX_SKEW"
-            )
-        )
 
-        rms, self.K, self.D, _, _ = (
-            cv2.fisheye.calibrate(
-                object_points,
-                image_points,
-                image_size,
-                self.K,
-                self.D,
-                flags=flags,
+            hull_area = cv2.contourArea(hull)
+
+            coverage = (
+                hull_area
+                / float(w * h)
             )
-        )
+
+            samples.append(
+                {
+                    "name": image_name,
+                    "obj": obj,
+                    "img": img,
+                    "coverage": coverage,
+                    "corners": len(ids_flat),
+                }
+            )
+
+        if len(samples) < 3:
+            print(
+                "Not enough valid images for fisheye calibration."
+            )
+            return False
 
         print(
-            f"Number of images used for calibration: {count}"
+            f"Candidate images for calibration: {len(samples)}"
         )
 
+        result = self._try_fit(
+            samples,
+            image_size,
+        )
+
+        accepted = samples
+        rejected = []
+
+        if result is None:
+            result, accepted, rejected = (
+                self._find_stable_subset(
+                    samples,
+                    image_size,
+                )
+            )
+
+        if result is None:
+            print()
+            print(
+                "Fisheye calibration could not be completed."
+            )
+            print(
+                "Pinhole calibration can still be attempted."
+            )
+
+            return False
+
+        rms, self.K, self.D, _, _ = result
+
+        print()
+        print(
+            f"Number of images used for calibration: "
+            f"{len(accepted)}"
+        )
+
+        if rejected:
+            print(
+                f"Automatically rejected unstable views: "
+                f"{len(rejected)}"
+            )
+
+            for sample in rejected:
+                print(
+                    f"  - {sample['name']} "
+                    f"({sample['corners']} corners, "
+                    f"{sample['coverage'] * 100:.3f}% coverage)"
+                )
+
+        print()
         print(
             f"RMS reprojection error: {rms:.6f} px"
         )
@@ -445,8 +528,11 @@ class FisheyeCalibrator(CharucoCalibrator):
         )
 
         print(
-            f"Camera calibration data saved to {output_path}"
+            f"Camera calibration data saved to "
+            f"{output_path}"
         )
+
+        return True
 
     def undistort_image(
         self,
@@ -634,15 +720,16 @@ class PinholeCalibrator(CharucoCalibrator):
                 continue
 
             ids, corners = self.detect_charuco_corners(
-                image,
-                image_name,
-                grayscale,
-                verbose,
+                image=image,
+                image_name=image_name,
+                grayscale=grayscale,
+                verbose=verbose,
             )
 
             if ids is None or len(ids) <= 4:
                 print(
-                    f"Could not interpolate corners for {image_name}"
+                    f"Skipping {image_name}: "
+                    "insufficient ChArUco corners"
                 )
                 continue
 
@@ -650,65 +737,80 @@ class PinholeCalibrator(CharucoCalibrator):
             all_corners.append(corners)
 
         if not all_corners:
-            print("No valid ChArUco images found.")
-            return
+            print(
+                "No valid ChArUco images found."
+            )
+            return False
 
-        if hasattr(
-            cv2.aruco,
-            "calibrateCameraCharuco",
-        ):
-            rms, self.K, self.D, _, _ = (
-                cv2.aruco.calibrateCameraCharuco(
+        try:
+            if hasattr(
+                cv2.aruco,
+                "calibrateCameraCharuco",
+            ):
+                rms, self.K, self.D, _, _ = (
+                    cv2.aruco.calibrateCameraCharuco(
+                        all_corners,
+                        all_ids,
+                        self.board,
+                        image_size,
+                        None,
+                        None,
+                    )
+                )
+
+            else:
+                board_points = (
+                    self.board
+                    .getChessboardCorners()
+                )
+
+                object_points = []
+                image_points = []
+
+                for corners, ids in zip(
                     all_corners,
                     all_ids,
-                    self.board,
-                    image_size,
-                    None,
-                    None,
+                ):
+                    ids_flat = (
+                        np.asarray(ids)
+                        .reshape(-1)
+                        .astype(np.int32)
+                    )
+
+                    object_points.append(
+                        board_points[ids_flat]
+                        .astype(np.float32)
+                        .reshape(-1, 1, 3)
+                    )
+
+                    image_points.append(
+                        np.asarray(
+                            corners,
+                            dtype=np.float32,
+                        )
+                        .reshape(-1, 1, 2)
+                    )
+
+                rms, self.K, self.D, _, _ = (
+                    cv2.calibrateCamera(
+                        object_points,
+                        image_points,
+                        image_size,
+                        None,
+                        None,
+                    )
                 )
+
+        except cv2.error as exc:
+            print()
+            print(
+                "Pinhole calibration failed."
             )
+            print(exc)
 
-        else:
-            board_points = (
-                self.board.getChessboardCorners()
-            )
+            return False
 
-            object_points = []
-            image_points = []
-
-            for corners, ids in zip(
-                all_corners,
-                all_ids,
-            ):
-                ids_flat = (
-                    np.asarray(ids)
-                    .reshape(-1)
-                    .astype(np.int32)
-                )
-
-                object_points.append(
-                    board_points[ids_flat]
-                    .astype(np.float32)
-                    .reshape(-1, 1, 3)
-                )
-
-                image_points.append(
-                    np.asarray(
-                        corners,
-                        dtype=np.float32,
-                    ).reshape(-1, 1, 2)
-                )
-
-            rms, self.K, self.D, _, _ = (
-                cv2.calibrateCamera(
-                    object_points,
-                    image_points,
-                    image_size,
-                    None,
-                    None,
-                )
-            )
-
+        print()
         print(
             f"Number of images used for calibration: "
             f"{len(all_corners)}"
@@ -734,8 +836,11 @@ class PinholeCalibrator(CharucoCalibrator):
         )
 
         print(
-            f"Camera calibration data saved to {output_path}"
+            f"Camera calibration data saved to "
+            f"{output_path}"
         )
+
+        return True
 
     def undistort_image(
         self,
@@ -756,14 +861,12 @@ class PinholeCalibrator(CharucoCalibrator):
 
         h, w = image.shape[:2]
 
-        new_K, _ = (
-            cv2.getOptimalNewCameraMatrix(
-                self.K,
-                self.D,
-                (w, h),
-                balance,
-                (w, h),
-            )
+        new_K, _ = cv2.getOptimalNewCameraMatrix(
+            self.K,
+            self.D,
+            (w, h),
+            balance,
+            (w, h),
         )
 
         undistorted = cv2.undistort(
@@ -840,7 +943,9 @@ class PinholeCalibrator(CharucoCalibrator):
         p1 = d[2] if len(d) > 2 else 0.0
         p2 = d[3] if len(d) > 3 else 0.0
 
-        print("Camera parameters for COLMAP:")
+        print(
+            "Camera parameters for COLMAP:"
+        )
 
         print(
             f"OPENCV: "
