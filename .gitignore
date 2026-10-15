@@ -33,3 +33,4 @@ data/undistorted_images/*
 # Generated data
 data/virtual_cameras/
 reconstruction/
+data/undistortion_comparisons/
