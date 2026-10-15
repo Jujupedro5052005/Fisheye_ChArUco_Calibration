@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="example-pinhole/calibration/images/calib_0018_20260917_083712_24corners.png" alt="Real ChArUco calibration capture" width="760"/>
+  <img src="example-light_fisheye/calibration_images/calib_0018_20260917_083712_24corners.png" alt="Real ChArUco calibration capture" width="760"/>
 </p>
 
 <p align="center">
@@ -558,7 +558,7 @@ These files can be used as a visual reference when validating a new installation
 ## Real Calibration Capture
 
 <p align="center">
-  <img src="example-pinhole/calibration/images/calib_0018_20260917_083712_24corners.png" width="760"/>
+  <img src="example-light_fisheye/calibration_images/calib_0018_20260917_083712_24corners.png" width="760"/>
 </p>
 
 <p align="center">
@@ -568,7 +568,7 @@ These files can be used as a visual reference when validating a new installation
 ## Real Camera Image — Before Undistortion
 
 <p align="center">
-  <img src="example-pinhole/raw_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
+  <img src="example-light_fisheye/raw_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
 </p>
 
 <p align="center">
@@ -578,7 +578,7 @@ These files can be used as a visual reference when validating a new installation
 ## Same Image — After Fisheye Undistortion
 
 <p align="center">
-  <img src="example-pinhole//undistorted_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
+  <img src="example-light_fisheye/undistorted_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
 </p>
 
 <p align="center">
