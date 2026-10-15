@@ -869,4 +869,23 @@ for the licensing terms inherited from the original project.
 
 ## Capture calibration images
 
+
+> [!IMPORTANT]
+> **Starting a new calibration dataset:** the capture scripts keep incrementing filenames and **do not automatically clear previous images**. Before calibrating a different camera or starting a fresh dataset, manually empty both:
+>
+> ```text
+> data/calibration/images/
+> data/raw_images/
+> ```
+>
+> Keep the tracked `.gitkeep` placeholders if present. For example:
+>
+> ```bash
+> find data/calibration/images -type f ! -name '.gitkeep' -delete
+> find data/raw_images -type f ! -name '.gitkeep' -delete
+> ```
+>
+> Otherwise, newly captured frames will be added to the existing dataset and the next calibration may unintentionally mix images from different capture sessions or cameras.
+
+
 A ready-to-use capture template is included in `scripts/capture_calibration_images.py`. It can be run with commands such as `python scripts/capture_calibration_images.py --device /dev/video0` and saves valid ChArUco frames into `data/calibration/images/` while `F` can be used to save raw validation frames into `data/raw_images/`. The script is intended as a template: device, resolution, FPS, pixel format, board geometry, and acceptance criteria can be adapted to the target camera.
