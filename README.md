@@ -445,7 +445,7 @@ data/raw_images/
 Then run:
 
 ```bash
-python scripts/undistort_images.py
+python scripts/undistort_images.py --model pinhole
 ```
 
 The default model is:
@@ -614,7 +614,7 @@ python scripts/run_calibration.py
 # 4. Capture or place arbitrary images in data/raw_images/
 
 # 5. Undistort the images
-python scripts/undistort_images.py
+python scripts/undistort_images.py --model pinhole
 ```
 
 In short:
@@ -822,7 +822,7 @@ Recommended checks include:
 
 ```bash
 python scripts/run_calibration.py
-python scripts/undistort_images.py
+python scripts/undistort_images.py --model pinhole
 ```
 
 and visual comparison against:
@@ -865,3 +865,8 @@ for the licensing terms inherited from the original project.
 <p align="center">
   <strong>Accurate calibration is the foundation of reliable perception.</strong>
 </p>
+
+
+## Capture calibration images
+
+A ready-to-use capture template is included in `scripts/capture_calibration_images.py`. It can be run with commands such as `python scripts/capture_calibration_images.py --device /dev/video0` and saves valid ChArUco frames into `data/calibration/images/` while `F` can be used to save raw validation frames into `data/raw_images/`. The script is intended as a template: device, resolution, FPS, pixel format, board geometry, and acceptance criteria can be adapted to the target camera.
