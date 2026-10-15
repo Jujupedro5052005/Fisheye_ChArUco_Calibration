@@ -118,6 +118,8 @@ Fisheye_ChArUco_Calibration/
 │   └── undistorted_images/
 │
 ├── docs/
+│   ├── boards/
+│   │   └── charuco_A4_7x5.png
 │   └── README_images/
 │
 ├── scripts/
@@ -253,6 +255,25 @@ MARKER_LENGTH = 0.028
 > The dimensions and physical measurements configured in the software must match the printed board exactly.
 >
 > Do not print the board using any option that automatically rescales it to fit the page.
+
+
+### Printable board included
+
+The exact ChArUco board image used for the calibration examples is included in the repository:
+
+```text
+docs/boards/charuco_A4_7x5.png
+```
+
+<p align="center">
+  <img src="docs/boards/charuco_A4_7x5.png" alt="Printable 7x5 ChArUco calibration board" width="760"/>
+</p>
+
+It is provided as a ready-to-print reference for the current `7 × 5` / `DICT_5X5_100` configuration. When printing it, use **100% / actual size** and disable options such as *fit to page*, *shrink to printable area*, or any automatic scaling.
+
+> [!IMPORTANT]
+> After printing, physically verify the square and marker dimensions before collecting a dataset. The software configuration and the printed target must use the same real-world dimensions; any print scaling directly changes the recovered camera intrinsics.
+
 
 ---
 
