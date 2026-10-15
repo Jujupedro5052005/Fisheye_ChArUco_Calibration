@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="examples/calibration_images/calib_0018_20260917_083712_24corners.png" alt="Real ChArUco calibration capture" width="760"/>
+  <img src="example-pinhole/calibration_images/calib_0018_20260917_083712_24corners.png" alt="Real ChArUco calibration capture" width="760"/>
 </p>
 
 <p align="center">
@@ -111,7 +111,7 @@ Fisheye_ChArUco_Calibration/
 │   ├── raw_images/
 │   └── undistorted_images/
 │
-├── examples/
+├── /
 │   ├── calibration_images/
 │   ├── camera_intrinsics/
 │   ├── raw_images/
@@ -145,7 +145,7 @@ Working directory used for your own calibration.
 
 Generated files in this directory are intentionally excluded from Git.
 
-### `examples/`
+### `/`
 
 Reference dataset included with the repository.
 
@@ -504,13 +504,13 @@ is often a useful starting point.
 The repository includes a complete example under:
 
 ```text
-examples/
+/
 ```
 
 ### Calibration images
 
 ```text
-examples/calibration_images/
+/calibration_images/
 ```
 
 Contains a known ChArUco calibration dataset.
@@ -518,7 +518,7 @@ Contains a known ChArUco calibration dataset.
 ### Reference intrinsics
 
 ```text
-examples/camera_intrinsics/
+/camera_intrinsics/
 ```
 
 Contains the resulting fisheye and pinhole calibration files.
@@ -526,7 +526,7 @@ Contains the resulting fisheye and pinhole calibration files.
 ### Raw images
 
 ```text
-examples/raw_images/
+/raw_images/
 ```
 
 Contains distorted images from the camera.
@@ -534,7 +534,7 @@ Contains distorted images from the camera.
 ### Undistorted images
 
 ```text
-examples/undistorted_images/
+/undistorted_images/
 ```
 
 Contains the corresponding corrected images.
@@ -543,7 +543,7 @@ These files can be used as a visual reference when validating a new installation
 
 ---
 
-# Visual Examples
+# Visual 
 
 ## ChArUco Target
 
@@ -558,7 +558,7 @@ These files can be used as a visual reference when validating a new installation
 ## Real Calibration Capture
 
 <p align="center">
-  <img src="examples/calibration_images/calib_0018_20260917_083712_24corners.png" width="760"/>
+  <img src="/calibration_images/calib_0018_20260917_083712_24corners.png" width="760"/>
 </p>
 
 <p align="center">
@@ -568,7 +568,7 @@ These files can be used as a visual reference when validating a new installation
 ## Real Camera Image — Before Undistortion
 
 <p align="center">
-  <img src="examples/raw_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
+  <img src="/raw_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
 </p>
 
 <p align="center">
@@ -578,7 +578,7 @@ These files can be used as a visual reference when validating a new installation
 ## Same Image — After Fisheye Undistortion
 
 <p align="center">
-  <img src="examples/undistorted_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
+  <img src="/undistorted_images/img17_2026-04-17_08-26-02_375.jpg" width="760"/>
 </p>
 
 <p align="center">
@@ -828,7 +828,7 @@ python scripts/undistort_images.py --model pinhole
 and visual comparison against:
 
 ```text
-examples/
+/
 ```
 
 ---
@@ -846,7 +846,7 @@ Original repository:
 https://github.com/jamiemilsom/Fisheye_ChArUco_Calibration
 ```
 
-This fork reorganizes and extends the project with a simplified workflow, updated OpenCV compatibility, calibration examples, capture utilities, reproducible dependencies and improved documentation.
+This fork reorganizes and extends the project with a simplified workflow, updated OpenCV compatibility, calibration , capture utilities, reproducible dependencies and improved documentation.
 
 ---
 
